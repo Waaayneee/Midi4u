@@ -41,19 +41,36 @@ private:
     juce::Colour colour_ = juce::Colours::grey;
 };
 
-// The "Set up Midi4u" instructions, shown on first launch and from the Set up button.
+// The six step "Set up Midi4u" checklist.
 class SetupPanel final : public juce::Component
 {
 public:
     SetupPanel(AppController& controller, std::function<void()> onDone);
-    void start(); // picks the default mic and the cable output if they are not set yet
+    void start(); // runs the automatic parts of steps 3 and 4
+    void refresh(float micPeak);
     void resized() override;
     void paint(juce::Graphics& g) override;
 
 private:
+    struct Step
+    {
+        juce::Label title, detail;
+        juce::TextButton fix;
+        bool done = false;
+    };
+
+    void setStep(int index, bool done, const juce::String& detail, const juce::String& fixText = {});
+
     AppController& controller_;
     std::function<void()> onDone_;
+    Step steps_[6];
+    LevelMeter micMeter_;
+    juce::ToggleButton checklist_[4];
     juce::TextButton doneButton_{"Done"};
+    juce::Rectangle<int> rows_[6];
+    bool tonePlayed_ = false;
+    bool cableFound_ = false;
+    juce::uint32 nextCableScanMs_ = 0;
 };
 
 class MainComponent final : public juce::Component, private juce::Timer

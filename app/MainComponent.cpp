@@ -155,67 +155,209 @@ void StatusLight::paint(juce::Graphics& g)
 SetupPanel::SetupPanel(AppController& controller, std::function<void()> onDone)
     : controller_(controller), onDone_(std::move(onDone))
 {
+    const juce::String titles[6] = {"1. Virtual cable", "2. Midi4u Tap plugin", "3. Mic",
+                                    "4. Output", "5. Discord settings", "6. Test"};
+
+    for (int i = 0; i < 6; ++i)
+    {
+        auto& step = steps_[i];
+        step.title.setText(titles[i], juce::dontSendNotification);
+        styleLabel(step.title, true);
+        styleLabel(step.detail);
+        step.detail.setMinimumHorizontalScale(1.0f);
+        addAndMakeVisible(step.title);
+        addAndMakeVisible(step.detail);
+        addChildComponent(step.fix);
+    }
+
+    steps_[0].fix.onClick = [] { platform::cableDownloadPage().launchInDefaultBrowser(); };
+    steps_[1].fix.onClick = [] {
+        const auto folder = platform::vst3Folder();
+        (folder.isDirectory() ? folder : folder.getParentDirectory()).startAsProcess();
+    };
+    steps_[2].fix.onClick = [this] { controller_.useDefaultMic(); };
+    steps_[3].fix.onClick = [this] {
+        if (cableFound_)
+            controller_.useCableOutput();
+        else
+            platform::cableDownloadPage().launchInDefaultBrowser();
+    };
+    steps_[5].fix.onClick = [this] {
+        controller_.playTestTone();
+        tonePlayed_ = true;
+    };
+
+    const juce::String checklistText[4] = {
+        "Input device set to \"" + platform::cableDiscordInputName() + "\"",
+        "Output device set to your headphones (Scarlett)",
+        "Noise Suppression, Echo Cancellation and Automatic Gain Control off",
+        "Input Sensitivity set manually to the lowest level"};
+
+    for (int i = 0; i < 4; ++i)
+    {
+        checklist_[i].setButtonText(checklistText[i]);
+        checklist_[i].setToggleState(controller_.settings().discordChecklist[i], juce::dontSendNotification);
+        checklist_[i].onClick = [this, i] {
+            controller_.settings().discordChecklist[i] = checklist_[i].getToggleState();
+            controller_.saveSettings();
+        };
+        addAndMakeVisible(checklist_[i]);
+    }
+
+    addAndMakeVisible(micMeter_);
     addAndMakeVisible(doneButton_);
     doneButton_.onClick = [this] { onDone_(); };
 }
 
 void SetupPanel::start()
 {
+    nextCableScanMs_ = 0;
+    tonePlayed_ = false;
+
     if (! controller_.settings().mic)
         controller_.useDefaultMic();
 
     if (! controller_.outputIsCable())
         controller_.useCableOutput();
+
+    refresh(0.0f);
+}
+
+void SetupPanel::setStep(int index, bool done, const juce::String& detail, const juce::String& fixText)
+{
+    auto& step = steps_[index];
+
+    if (step.done != done)
+    {
+        step.done = done;
+        repaint(rows_[index]);
+    }
+
+    step.detail.setText(detail, juce::dontSendNotification);
+    step.fix.setButtonText(fixText);
+    step.fix.setVisible(fixText.isNotEmpty());
+}
+
+void SetupPanel::refresh(float micPeak)
+{
+    // Scanning devices is not free, so the cable check runs every 2 seconds.
+    const auto now = juce::Time::getMillisecondCounter();
+
+    if (now >= nextCableScanMs_)
+    {
+        nextCableScanMs_ = now + 2000;
+        const bool found = controller_.cableDevice().has_value();
+
+        if (found && ! cableFound_ && ! controller_.outputIsCable())
+            controller_.useCableOutput(); // the cable just appeared
+        cableFound_ = found;
+    }
+
+    const auto prefix = platform::cableOutputPrefix();
+
+    // 1. Virtual cable
+    if (cableFound_)
+        setStep(0, true, "\"" + prefix + "\" is installed.");
+    else
+        setStep(0, false, "Install the free virtual cable, then restart if asked. This turns green when \"" + prefix + "\" appears.",
+                "Download");
+
+    // 2. Plugin
+    const auto tap = controller_.pluginStatus();
+    const bool installed = platform::installedPlugin().exists();
+
+    if (tap == TapReaderStatus::connected)
+        setStep(1, true, "Midi4u Tap is sending music from Ableton.");
+    else if (tap == TapReaderStatus::versionMismatch)
+        setStep(1, false, "Please update Midi4u: the plugin and app versions differ.");
+    else if (! installed)
+        setStep(1, false, "Copy \"Midi4u Tap.vst3\" into " + platform::vst3Folder().getFullPathName(), "Open folder");
+    else
+        setStep(1, false, "In Ableton, drag Midi4u Tap onto the Master track. Not listed? Turn on \"Use VST3 Plug-In System Folder\" in Ableton's Plug-Ins settings and rescan.");
+
+    // 3. Mic
+    const auto& mic = controller_.micSupervisor();
+    const auto micName = mic.selected() ? juce::String(mic.selected()->name) : juce::String();
+    micMeter_.setPeak(micPeak);
+
+    if (mic.state() == DeviceState::running)
+        setStep(2, true, micName + ". Speak and watch the meter.");
+    else if (mic.state() == DeviceState::starting)
+        setStep(2, false, "Starting " + micName);
+    else if (! mic.selected())
+        setStep(2, false, "No mic selected.", "Use default mic");
+    else
+        setStep(2, false, micName + " is not working: " + juce::String(mic.lastError()), "Use default mic");
+
+    // 4. Output
+    const auto& output = controller_.outputSupervisor();
+
+    if (controller_.outputIsCable() && output.state() == DeviceState::running)
+        setStep(3, true, "Sending the mix to \"" + prefix + "\".");
+    else if (controller_.outputIsCable() && output.state() == DeviceState::starting)
+        setStep(3, false, "Starting \"" + prefix + "\"");
+    else if (cableFound_)
+        setStep(3, false, "The mix should go to \"" + prefix + "\".", "Select " + prefix);
+    else
+        setStep(3, false, "Waiting for step 1.");
+
+    // 5. Discord
+    bool allTicked = true;
+    for (const auto& item : checklist_)
+        allTicked = allTicked && item.getToggleState();
+    setStep(4, allTicked, "In Discord, open User Settings > Voice & Video and tick each item:");
+
+    // 6. Test
+    setStep(5, tonePlayed_,
+            tonePlayed_ ? "Did you hear the beep in Discord's Mic Test? If not, check the red items above."
+                        : "Start Discord's Mic Test, then play a short beep into the mix.",
+            "Play test tone");
 }
 
 void SetupPanel::resized()
 {
-    doneButton_.setBounds(getLocalBounds().reduced(16).removeFromBottom(30).removeFromRight(100));
+    auto area = getLocalBounds().reduced(16);
+    doneButton_.setBounds(area.removeFromBottom(30).removeFromRight(100));
+    area.removeFromBottom(8);
+
+    const int heights[6] = {62, 62, 74, 62, 150, 62};
+
+    for (int i = 0; i < 6; ++i)
+    {
+        rows_[i] = area.removeFromTop(heights[i]);
+        auto row = rows_[i].withTrimmedLeft(28).reduced(0, 4);
+        auto& step = steps_[i];
+
+        auto top = row.removeFromTop(22);
+        step.fix.setBounds(top.removeFromRight(150));
+        step.title.setBounds(top);
+
+        if (i == 4)
+        {
+            step.detail.setBounds(row.removeFromTop(22));
+            for (auto& item : checklist_)
+                item.setBounds(row.removeFromTop(24));
+        }
+        else if (i == 2)
+        {
+            step.detail.setBounds(row.removeFromTop(30));
+            micMeter_.setBounds(row.removeFromTop(10).withWidth(240).translated(4, 2));
+        }
+        else
+        {
+            step.detail.setBounds(row);
+        }
+    }
 }
 
 void SetupPanel::paint(juce::Graphics& g)
 {
     g.fillAll(panel);
 
-    const auto cable = platform::cableOutputPrefix();
-    const std::pair<int, juce::String> points[] = {
-        {0, "Install the free virtual cable from " + platform::cableDownloadPage().toString(false)
-                + ", then restart if asked. Afterwards \"" + cable + "\" appears in your sound devices."},
-        {0, "In Ableton, drag Midi4u Tap onto the Master track. Not listed? Turn on \"Use VST3 Plug-In System "
-            "Folders\" in Ableton's Plug-Ins settings and click Rescan."},
-        {0, "In this window, check that Mic input is your mic and Send mix to is \"" + cable
-                + "\". Midi4u picks both by itself the first time."},
-        {0, "In Discord, open User Settings > Voice & Video and set:"},
-        {1, "Input Device: \"" + platform::cableDiscordInputName() + "\""},
-        {1, "Output Device: your headphones (Scarlett)"},
-        {1, "Noise Suppression, Echo Cancellation and Automatic Gain Control: off"},
-        {1, "Input Sensitivity: set manually to the lowest level"},
-        {0, "Test: start Discord's Mic Test and click Play test tone. You should hear a short beep."},
-        {0, "When everything works, the three lights at the top of this window are green."}};
-
-    auto area = getLocalBounds().reduced(24, 20);
-    g.setColour(text);
-    g.setFont(juce::FontOptions(18.0f, juce::Font::bold));
-    g.drawText("Set up Midi4u", area.removeFromTop(28), juce::Justification::centredLeft);
-    area.removeFromTop(8);
-
-    for (size_t i = 0; i < std::size(points); ++i)
+    for (int i = 0; i < 6; ++i)
     {
-        const auto& [level, line] = points[i];
-        const bool nextIsSubPoint = i + 1 < std::size(points) && points[i + 1].first == 1;
-        auto row = area.withTrimmedLeft(level * 20);
-        g.setColour(dimText);
-        g.setFont(juce::FontOptions(14.0f));
-        g.drawText(level == 0 ? juce::String::fromUTF8("\xe2\x80\xa2") : "-", row.removeFromLeft(16).withHeight(20),
-                   juce::Justification::centredLeft);
-
-        juce::AttributedString string(line);
-        string.setFont(juce::FontOptions(14.0f));
-        string.setColour(text);
-        juce::TextLayout layout;
-        layout.createLayout(string, float(row.getWidth()));
-        layout.draw(g, row.withHeight(int(std::ceil(layout.getHeight()))).toFloat().translated(0, 1));
-        area.removeFromTop(int(std::ceil(layout.getHeight())) + (nextIsSubPoint ? 4 : 10));
+        g.setColour(steps_[i].done ? green : grey);
+        g.fillEllipse(juce::Rectangle<float>(float(rows_[i].getX() + 2), float(rows_[i].getY() + 9), 14.0f, 14.0f));
     }
 }
 
@@ -365,11 +507,17 @@ void MainComponent::refreshStatus()
 void MainComponent::timerCallback()
 {
     auto& engine = controller_.engine();
+    const float micPeak = engine.micMeter().take();
     musicMeter_.setPeak(engine.mixer().musicMeter().take());
-    micMeter_.setPeak(engine.micMeter().take());
+    micMeter_.setPeak(micPeak);
 
     if (++ticks_ % 4 == 0)
+    {
         refreshStatus();
+
+        if (setupPanel_.isVisible())
+            setupPanel_.refresh(micPeak);
+    }
 }
 
 void MainComponent::paint(juce::Graphics& g)

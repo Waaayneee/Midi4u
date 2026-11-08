@@ -133,6 +133,10 @@ Settings Settings::load()
     settings.latency = latencyFromName(json.getProperty("latency", "normal").toString());
     settings.startWithSystem = json.getProperty("startWithWindows", false);
 
+    if (const auto* list = json["discordChecklist"].getArray())
+        for (int i = 0; i < juce::jmin(4, list->size()); ++i)
+            settings.discordChecklist[i] = (*list)[i];
+
     return settings;
 }
 
@@ -147,6 +151,11 @@ void Settings::save() const
     object->setProperty("micMuted", micMuted);
     object->setProperty("latency", latencyName(latency));
     object->setProperty("startWithWindows", startWithSystem);
+
+    juce::Array<juce::var> checklist;
+    for (const bool done : discordChecklist)
+        checklist.add(done);
+    object->setProperty("discordChecklist", checklist);
 
     file().getParentDirectory().createDirectory();
     file().replaceWithText(juce::JSON::toString(juce::var(object)));

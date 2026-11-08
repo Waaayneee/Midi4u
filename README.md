@@ -85,40 +85,42 @@ The result should be `C:\Program Files\Common Files\VST3\Midi4u Tap.vst3`.
 
 ## How to run and use
 
-### First time: setting up
+### First time: the setup checklist
 
 1. Double-click **Midi4u.exe**.
    * If Windows shows **"Windows protected your PC"**, click **More info**, then **Run anyway**.
      This happens because the app is not code signed yet. You only need to do it once.
-2. The first time, Midi4u shows a short **Set up Midi4u** list. Here is each point in detail:
+2. The first time, Midi4u opens the **Set up Midi4u** checklist. Each step turns green when
+   it is done. If a step stays grey, it shows a button that helps fix it.
 
-   * **Virtual cable**: you did this in [Step 1](#step-1-install-vb-cable).
-   * **Midi4u Tap plug-in**: in Ableton, click the **Master** track (the track at the bottom
-     or far right). In the browser on the left, click **Plug-Ins**, open **VST3**, open
-     **Midi4u**, and drag **Midi4u Tap** onto the Master track. A small window appears with
-     a green light that says "Connected to Midi4u". If you can't find it, redo
-     [Step 5](#step-5-let-ableton-find-the-plug-in).
-   * **Mic and output**: Midi4u picks Windows' default microphone and **CABLE Input** by
-     itself. You can change them in the main window after the next step.
-   * **Discord settings**: open Discord, click the gear icon (**User Settings**) next to your
-     name at the bottom left, then click **Voice & Video**. Change these:
-     * **Input Device**: choose **CABLE Output (VB-Audio Virtual Cable)**.
-     * **Output Device**: choose your Scarlett (it may be called "Focusrite USB Audio" or
-       "Speakers (Focusrite…)").
-     * **Noise Suppression**: set to **None**. **Echo Cancellation**: turn off.
-       **Automatic Gain Control**: turn off. (Scroll down to find these. They are made for
-       voices and would cut or warp the music.)
-     * **Input Sensitivity**: turn off "Automatically determine input sensitivity", then
-       drag the slider all the way to the left, so quiet music is never cut off.
+   1. **Virtual cable**: green if VB-Cable is installed. If not, click **Download** and follow
+      [Step 1](#step-1-install-vb-cable). The step turns green by itself once VB-Cable appears.
+   2. **Midi4u Tap plug-in**: in Ableton, click the **Master** track (the track at the bottom
+      or far right). In the browser on the left, click **Plug-Ins**, open **VST3**, open
+      **Midi4u**, and drag **Midi4u Tap** onto the Master track. A small window appears with
+      a green light that says "Connected to Midi4u", and the step turns green.
+      If you can't find it, redo [Step 5](#step-5-let-ableton-find-the-plug-in).
+   3. **Mic**: Midi4u picks Windows' default microphone. Talk and check that the green meter
+      moves. Wrong mic? Finish the checklist, then pick the right one under **Mic input** in
+      the main window.
+   4. **Output**: Midi4u picks **CABLE Input** by itself. If it doesn't, click
+      **Select CABLE Input**.
+   5. **Discord settings**: open Discord, click the gear icon (**User Settings**) next to your
+      name at the bottom left, then click **Voice & Video**. Change these, ticking each box in
+      Midi4u as you go:
+      * **Input Device**: choose **CABLE Output (VB-Audio Virtual Cable)**.
+      * **Output Device**: choose your Scarlett (it may be called "Focusrite USB Audio" or
+        "Speakers (Focusrite…)").
+      * **Noise Suppression**: set to **None**. **Echo Cancellation**: turn off.
+        **Automatic Gain Control**: turn off. (Scroll down to find these. They are made for
+        voices and would cut or warp the music.)
+      * **Input Sensitivity**: turn off "Automatically determine input sensitivity", then
+        drag the slider all the way to the left, so quiet music is never cut off.
+   6. **Test**: in Discord's **Voice & Video** page, click **Let's Check** (the Mic Test). Then
+      click **Play test tone** in Midi4u. You should hear a short beep in Discord. Talk, and you
+      should hear yourself too. Click **Let's Check** again to stop the test.
 
-3. Click **Done** to get to the main window.
-4. Check that **Mic input** is your mic (talk and watch the Mic meter move) and that
-   **Send mix to** is **CABLE Input**.
-5. **Test**: in Discord's **Voice & Video** page, click **Let's Check** (the Mic Test). Then
-   click **Play test tone** in Midi4u. You should hear a short beep in Discord. Talk, and you
-   should hear yourself too. Click **Let's Check** again to stop the test.
-6. Check that all three lights at the top of Midi4u are **green**. Midi4u remembers
-   everything for next time.
+3. Click **Done**. Midi4u remembers everything for next time.
 
 ### Every time you stream
 
@@ -177,7 +179,7 @@ play along, it will sound out of time. Keep the music in voice chat for that.
 | **Send mix to** | Where the mix goes. Keep it on **CABLE Input**. |
 | **Latency** | Leave on **Normal**. Use **Safe** if Discord listeners hear crackles. |
 | **Start with Windows** | Opens Midi4u in the background when you log in. |
-| **Set up Midi4u** | Shows the setup list again. |
+| **Set up Midi4u** | Opens the checklist again. |
 | **Play test tone** | Plays a 2 second beep into the mix. |
 
 Closing the window keeps Midi4u running. It lives as an **M** icon near the clock at the bottom
@@ -213,89 +215,3 @@ plug-in, and keeps your settings. If Midi4u was open, it restarts it.
 
 Still stuck? Send Wayne the newest file from `%APPDATA%\Midi4u\logs` (paste that into the
 File Explorer address bar to open the folder).
-
-## How it works
-
-* **Midi4u Tap** sits on Ableton's Master track. It passes the audio through untouched,
-  so your headphones get exactly what they got before, and it copies each block into shared
-  memory. It never waits, so even if the app crashes, Ableton keeps playing normally.
-* **Midi4u App** reads that copy, resamples it to follow the output device's clock (Ableton
-  and VB-Cable run on different clocks, which would otherwise drift apart over an hour), mixes
-  in your mic, runs a limiter that keeps the mix under −1 dBFS, and plays it into CABLE Input.
-* Discord records from **CABLE Output**, the other end of the virtual cable.
-
-The Discord path adds roughly 20 to 40 ms of delay. Your own headphones get 0 ms extra.
-
-## For developers
-
-### Layout
-
-| Folder | What |
-|---|---|
-| `core/` | Ring buffer, shared memory bridge, Sync (resampling and drift), Mixer, device rules and supervision. No UI code. |
-| `plugin/` | Midi4u Tap, a thin JUCE wrapper around `core/TapPluginSide`. Its optional stream sound reuses `core/Engine` and `app/JuceDevice` |
-| `app/` | Midi4u App (tray app, setup, manual mode) and the JUCE device sink |
-| `updater/` | `Update Midi4u.bat` and `update.ps1`, shipped in the release zip |
-| `tests/` | Catch2 unit tests (`[unit]`) and integration tests (`[integration]`) |
-| `libs/` | JUCE 9.0.5, Catch2 3.16.1, libsamplerate 0.2.2 (git submodules) |
-
-### Build
-
-Needs CMake 3.22 or newer and a C++20 compiler (Visual Studio 2022 or newer on Windows, Xcode
-command line tools on macOS).
-
-```bash
-git submodule update --init --recursive
-```
-
-```bash
-cmake -S . -B build
-```
-
-```bash
-cmake --build build --config Release --parallel
-```
-
-```bash
-ctest --test-dir build -C Release --output-on-failure
-```
-
-Outputs:
-
-* `build/plugin/Midi4uTap_artefacts/Release/VST3/Midi4u Tap.vst3`
-* `build/app/Midi4u_artefacts/Release/Midi4u.exe` (or `Midi4u.app` on macOS)
-
-Options: `-DMIDI4U_BUILD_JUCE=OFF` builds only core and tests (fast).
-`-DMIDI4U_RTSAN=ON` turns on Clang RealtimeSanitizer for the audio callbacks. It needs
-upstream LLVM 20 or newer, because Apple's clang doesn't include it.
-
-CI (GitHub Actions, Windows) builds everything, runs the tests, runs pluginval at strictness
-10 and uploads a `Midi4u-windows` zip as a build artifact.
-
-### Releasing
-
-The updater installs the newest [GitHub release](https://github.com/Waaayneee/Midi4u/releases).
-To publish one, bump `VERSION` in the root `CMakeLists.txt`, commit, then push a tag. CI
-builds, tests and attaches `Midi4u-windows.zip` to a new release.
-
-```bash
-git tag v0.1.0
-```
-
-```bash
-git push origin v0.1.0
-```
-
-### Trying it on a Mac
-
-The same app runs on macOS for development. Use
-[BlackHole 2ch](https://existential.audio/blackhole/) instead of VB-Cable. Copy the plug-in to
-`~/Library/Audio/Plug-Ins/VST3`, and pick "BlackHole 2ch" as Discord's input. Settings and
-logs are in `~/Library/Application Support/Midi4u`.
-
-### Notes
-
-* WASAPI shared mode always uses the driver's period (about 10 ms), so on Windows the Latency
-  setting changes the app's internal buffering but not the output buffer size.
-* JUCE is licensed under AGPLv3 or a commercial JUCE licence. A private build is fine. A
-  public release needs a licence decision.
