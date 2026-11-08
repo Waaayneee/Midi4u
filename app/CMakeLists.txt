@@ -3,6 +3,7 @@ juce_add_gui_app(Midi4u
     COMPANY_NAME "Midi4u"
     BUNDLE_ID "com.midi4u.app"
     VERSION ${PROJECT_VERSION}
+    ICON_BIG ${CMAKE_CURRENT_SOURCE_DIR}/icon.png
     MICROPHONE_PERMISSION_ENABLED TRUE
     MICROPHONE_PERMISSION_TEXT "Midi4u mixes your mic with Ableton's music for Discord.")
 
