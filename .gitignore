@@ -1,2 +1,27 @@
+# OS junk
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Local notes and design docs
 docs/
+
+# Build output
+build*/
+cmake-build-*/
+out/
+CMakeUserPresets.json
+compile_commands.json
+
+# Packaging and CI leftovers
+package/
+*.zip
+pluginval-logs/
+
+# Editors and tools
+.vs/
+.vscode/
+.idea/
+*.user
+*.swp
+.claude/

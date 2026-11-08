@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write # lets a v* tag publish a GitHub Release
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -35,8 +38,9 @@ jobs:
           New-Item -ItemType Directory -Force package | Out-Null
           Copy-Item build/app/Midi4u_artefacts/Release/Midi4u.exe package/
           Copy-Item -Recurse "build/plugin/Midi4uTap_artefacts/Release/VST3/Midi4u Tap.vst3" package/
+          Copy-Item updater/* package/
 
-      # Download from the run's Summary page: a zip with Midi4u.exe and the Midi4u Tap.vst3 folder.
+      # Download from the run's Summary page: a zip with Midi4u.exe, the Midi4u Tap.vst3 folder and the updater.
       - uses: actions/upload-artifact@v4
         with:
           name: Midi4u-windows
@@ -48,3 +52,13 @@ jobs:
           name: pluginval-logs
           path: pluginval-logs/
           if-no-files-found: ignore
+
+      # Push a tag like v0.2.0 to publish a release. The updater installs the newest one.
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          Compress-Archive package/* Midi4u-windows.zip
+          gh release create $env:GITHUB_REF_NAME Midi4u-windows.zip --title "Midi4u $env:GITHUB_REF_NAME" --generate-notes

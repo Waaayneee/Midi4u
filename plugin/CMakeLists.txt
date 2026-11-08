@@ -14,7 +14,13 @@ juce_add_plugin(Midi4uTap
     VST3_CATEGORIES Fx Tools
     COPY_PLUGIN_AFTER_BUILD FALSE)
 
-target_sources(Midi4uTap PRIVATE TapPlugin.cpp)
+# The stream sound output reuses the app's JUCE device code.
+target_sources(Midi4uTap PRIVATE
+    TapPlugin.cpp
+    ../app/JuceDevice.cpp
+    ../app/Platform.cpp)
+
+target_include_directories(Midi4uTap PRIVATE ../app)
 
 target_compile_definitions(Midi4uTap PUBLIC
     JUCE_WEB_BROWSER=0
@@ -25,7 +31,12 @@ target_link_libraries(Midi4uTap
     PRIVATE
         midi4u_core
         juce::juce_audio_processors
+        juce::juce_audio_devices
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
+
+if(WIN32)
+    target_link_libraries(Midi4uTap PRIVATE ole32)
+endif()

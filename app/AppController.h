@@ -19,7 +19,6 @@ struct Settings
     bool musicMuted = false, micMuted = false;
     midi4u::Latency latency = midi4u::Latency::normal;
     bool startWithSystem = false;
-    bool discordChecklist[4] = {false, false, false, false};
 
     static juce::File file();
     static Settings load();
