@@ -1,5 +1,5 @@
 # Updates Midi4u to the newest GitHub release.
-# Keep this file next to Midi4u.exe and run it with "Update Midi4u.bat".
+# Keep this file next to Midi4u.exe and run it with "Update Midi4u (click me).bat".
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue' # the progress bar makes downloads very slow in Windows PowerShell

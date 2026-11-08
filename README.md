@@ -54,7 +54,7 @@ Then:
 1. Right-click the zip and choose **Properties**. If you see an **Unblock** box at the
    bottom, tick it and click **OK**. This stops Windows from warning about the files later.
 2. Right-click the zip, choose **Extract All…**, then **Extract**. Inside you will find
-   `Midi4u.exe`, a folder called `Midi4u Tap.vst3`, `Update Midi4u.bat` and `update.ps1`.
+   `Midi4u.exe`, a folder called `Midi4u Tap.vst3`, `Update Midi4u (click me).bat` and `update.ps1`.
 
 ### Step 3: Install the Midi4u Tap plug-in
 
@@ -70,7 +70,7 @@ The result should be `C:\Program Files\Common Files\VST3\Midi4u Tap.vst3`.
 ### Step 4: Put the Midi4u app somewhere permanent
 
 1. Open your **Documents** folder and create a new folder called `Midi4u`.
-2. Move `Midi4u.exe`, `Update Midi4u.bat` and `update.ps1` into it. Don't run Midi4u from the
+2. Move `Midi4u.exe`, `Update Midi4u (click me).bat` and `update.ps1` into it. Don't run Midi4u from the
    Downloads folder, because "Start with Windows" remembers where the file is.
 3. Optional: right-click `Midi4u.exe`, choose **Show more options > Send to > Desktop
    (create shortcut)** to get a desktop icon.
@@ -188,9 +188,13 @@ Right-click it and choose **Quit Midi4u** to close it completely.
 ### Updating Midi4u
 
 1. Close Ableton Live.
-2. Open your `Documents\Midi4u` folder and double-click **Update Midi4u.bat**.
+2. Open your `Documents\Midi4u` folder and double-click **Update Midi4u (click me).bat**.
 3. Click **Yes** when Windows asks. The updater needs this to update the plug-in in Program Files.
 4. Wait for "Midi4u is updated" (or "already up to date"), then press **Enter**.
+
+The updater is two files: the `.bat` file is the one you double-click, and it runs
+`update.ps1`, which does the actual work. (Windows won't run a `.ps1` file when you
+double-click it.) Keep both files next to `Midi4u.exe`.
 
 The updater downloads the newest release from GitHub. It updates both the app and the
 plug-in, and keeps your settings. If Midi4u was open, it restarts it.
@@ -210,7 +214,7 @@ plug-in, and keeps your settings. If Midi4u was open, it restarts it.
 | You can't hear YouTube or Windows sounds any more, and listeners hear them instead | Windows' default output got set to "CABLE Input". Switch it back to your speakers or Scarlett in Sound settings. |
 | Your mic isn't in the Mic input list | Plug it in, wait a few seconds and open the list again. "CABLE Output" and "Stereo Mix" are hidden on purpose. |
 | Midi4u Tap says "Another Tap is already active" | You added it twice. Remove the extra one; only the Master track needs it. |
-| Something says "Please update Midi4u" | The plug-in and the app come from different versions. Close Ableton and run **Update Midi4u.bat**. |
+| Something says "Please update Midi4u" | The plug-in and the app come from different versions. Close Ableton and run **Update Midi4u (click me).bat**. |
 
 Still stuck? Send Wayne the newest file from `%APPDATA%\Midi4u\logs` (paste that into the
 File Explorer address bar to open the folder).
