@@ -46,9 +46,8 @@ listens to the other end as if it were a microphone.
 
 ### Step 2: Get the Midi4u files
 
-1. Open [the newest Midi4u release](https://github.com/Waaayneee/Midi4u/releases/latest).
-   You don't need a GitHub account.
-2. Under **Assets**, click **Midi4u-windows.zip** to download it.
+1. Click [Download Midi4u-windows.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-windows.zip).
+   This always gets the newest version, and you don't need a GitHub account.
 
 Then:
 
