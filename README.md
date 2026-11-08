@@ -12,17 +12,6 @@ Ableton Master ─ Midi4u Tap (VST3) ─ untouched ─→ ASIO → Scarlett → 
                                           Discord input = "CABLE Output"
 ```
 
-## Screenshot
-
-<p>
-  <img src="assets/main-window.png" alt="Midi4u main window with Plugin, Mic and Output lights green" width="440">
-  <img src="assets/setup-panel.png" alt="Set up Midi4u checklist with six steps" width="440">
-</p>
-
-Left: the main window when everything is working (three green lights). Right: the
-**Set up Midi4u** checklist. These were taken on a Mac during development, so the device
-names differ. On Windows, **Send mix to** shows "CABLE Input" and step 1 waits for VB-Cable.
-
 ## How to install
 
 This takes about 15 minutes. You need to do it once per computer.
@@ -207,7 +196,6 @@ The Discord path adds roughly 20 to 40 ms of delay. Your own headphones get 0 ms
 | `app/` | Midi4u App (tray app, setup, manual mode) and the JUCE device sink |
 | `tests/` | Catch2 unit tests (`[unit]`) and integration tests (`[integration]`) |
 | `libs/` | JUCE 9.0.5, Catch2 3.16.1, libsamplerate 0.2.2 (git submodules) |
-| `assets/` | README screenshots |
 
 ### Build
 
