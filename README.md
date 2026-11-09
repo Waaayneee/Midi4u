@@ -18,7 +18,7 @@ Ableton Master ─ Midi4u Tap (VST3) ─ untouched ─→ ASIO → Scarlett → 
 >
 > | Your computer | Download | Virtual cable | You double-click |
 > |---|---|---|---|
-> | **Windows 10 or 11** (64-bit) | [Midi4u-windows.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-windows.zip) | VB-Cable | `Midi4u.exe` |
+> | **Windows 10 or 11** (64-bit) | [Midi4u-windows.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-windows.zip) | VB-Cable | `Install Midi4u (click me).bat` |
 > | 🍎 **Intel Mac** | [Midi4u-macos.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-macos.zip) | BlackHole 2ch | `Install Midi4u (click me).command` |
 > | 🍎 **Apple silicon Mac** (M1, M2, M3, M4…) | [Midi4u-macos.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-macos.zip) | BlackHole 2ch | `Install Midi4u (click me).command` |
 >
@@ -101,10 +101,11 @@ Use Homebrew? `brew install blackhole-2ch` does the same.
 
 | File | What it is |
 |---|---|
-| `Midi4u.exe` | The app |
-| `Midi4u Tap.vst3` | The plug-in for Ableton (a folder) |
+| `Install Midi4u (click me).bat` | **Open this first.** Installs everything |
 | `Update Midi4u (click me).bat` | Double-click to update later |
-| `update.ps1` | Used by the updater. Don't open it |
+| `Midi4u.exe` | The app |
+| `Midi4u Tap.vst3` | The plug-in for Ableton (a folder). The installer copies it for you |
+| `update.ps1` | Used by the installer and the updater. Don't open it |
 
 </td><td valign="top">
 
@@ -114,7 +115,8 @@ Use Homebrew? `brew install blackhole-2ch` does the same.
 
 | File | What it is |
 |---|---|
-| `Install Midi4u (click me).command` | **The only file you open.** Installs everything |
+| `Install Midi4u (click me).command` | **Open this first.** Installs everything |
+| `Update Midi4u (click me).command` | Double-click to update later |
 | `Midi4u.app` | The app. The installer copies it for you |
 | `Midi4u Tap.vst3` | The plug-in for Ableton. The installer copies it for you |
 
@@ -124,36 +126,29 @@ Use Homebrew? `brew install blackhole-2ch` does the same.
 ### Step 3: Install Midi4u
 
 <table>
-<tr><th width="50%">Windows: copy two things into place</th><th width="50%">🍎 Mac: double-click the installer</th></tr>
+<tr><th width="50%">Windows: double-click the installer</th><th width="50%">🍎 Mac: double-click the installer</th></tr>
 <tr><td valign="top">
 
-**The plug-in:**
+1. Move the extracted **Midi4u-windows** folder into your **Documents** folder and keep it there. Midi4u runs from
+   it, and the updater lives in it.
+2. Double-click **`Install Midi4u (click me).bat`**.
+3. Click **Yes** when Windows asks. The installer needs this to put the plug-in in
+   `C:\Program Files\Common Files\VST3`, where Ableton looks for it.
+4. A window shows **"Midi4u is installed and opening now"**. Press **Enter** to close it.
 
-1. Open File Explorer, click in the address bar at the top, type `C:\Program Files\Common Files` and press **Enter**.
-2. If there is no folder called **VST3**, right-click an empty space, choose **New > Folder**, and name it `VST3`.
-   Click **Continue** if Windows asks for permission.
-3. Copy the whole **Midi4u Tap.vst3** folder (from the extracted zip) into that **VST3** folder. Click **Continue** if
-   Windows asks for permission.
-
-The result should be `C:\Program Files\Common Files\VST3\Midi4u Tap.vst3`.
-
-**The app:**
-
-1. Open your **Documents** folder and create a new folder called `Midi4u`.
-2. Move `Midi4u.exe`, `Update Midi4u (click me).bat` and `update.ps1` into it. Don't run Midi4u from the Downloads
-   folder, because "Start with Windows" remembers where the file is.
-3. Optional: right-click `Midi4u.exe`, choose **Show more options > Send to > Desktop (create shortcut)** to get a
-   desktop icon.
+Optional: right-click `Midi4u.exe`, choose **Show more options > Send to > Desktop (create shortcut)** to get a
+desktop icon.
 
 </td><td valign="top">
 
-1. Double-click **`Install Midi4u (click me).command`**.
-2. **The first time, macOS blocks it**, because Midi4u isn't registered with Apple. You approve it once:
+1. Move the **Midi4u-macos** folder into your **Documents** folder and keep it there. The updater lives in it.
+2. Double-click **`Install Midi4u (click me).command`**.
+3. **The first time, macOS blocks it**, because Midi4u isn't registered with Apple. You approve it once:
    * **macOS 15 Sequoia or newer:** click **Done** on the message. Open **System Settings → Privacy & Security**,
      scroll down to **Security**, and next to *"Install Midi4u (click me).command" was blocked*, click
      **Open Anyway**. Enter your Mac password, then click **Open Anyway** again.
    * **macOS 14 or older:** **right-click** (or control-click) the file, choose **Open**, then **Open** again.
-3. A Terminal window opens and shows:
+4. A Terminal window opens and shows:
    ```
    Installing Midi4u...
      Midi4u.app       -> /Applications
@@ -161,7 +156,7 @@ The result should be `C:\Program Files\Common Files\VST3\Midi4u Tap.vst3`.
    Done! Midi4u is opening now.
    ```
    You can close Terminal.
-4. Midi4u opens, and macOS asks **"Midi4u" would like to access the microphone**. Click **Allow**. Midi4u needs this
+5. Midi4u opens, and macOS asks **"Midi4u" would like to access the microphone**. Click **Allow**. Midi4u needs this
    to hear your mic.
 
 Don't open `Midi4u.app` from the download folder: the installer has already put it in **Applications** and told macOS
@@ -186,8 +181,9 @@ it's safe. From now on, open Midi4u from **Applications** (or press **⌘ Space*
 ### First time: the setup checklist
 
 1. Open Midi4u.
-   * **Windows:** double-click **Midi4u.exe**. If Windows shows **"Windows protected your PC"**, click **More info**,
-     then **Run anyway**. This happens because the app is not code signed yet. You only need to do it once.
+   * **Windows:** the installer already opened it. Next time, double-click **Midi4u.exe** in your
+     `Documents\Midi4u-windows` folder. If Windows shows **"Windows protected your PC"**, click **More info**, then
+     **Run anyway**. This happens because the app is not code signed yet. You only need to do it once.
    * 🍎 **Mac:** the installer already opened it. Next time, open it from **Applications**.
 2. The first time, Midi4u opens the **Set up Midi4u** checklist. Each step turns green when it is done. If a step
    stays grey, it shows a button that helps fix it.
@@ -299,16 +295,20 @@ The **M** icon sits in the menu bar at the top right of the screen. Click it for
 ### Updating Midi4u
 
 <table>
-<tr><th width="50%">Windows: run the updater</th><th width="50%">🍎 Mac: download and install again</th></tr>
+<tr><th width="50%">Windows: run the updater</th><th width="50%">🍎 Mac: run the updater</th></tr>
 <tr><td valign="top">
 
 1. Close Ableton Live.
-2. Open your `Documents\Midi4u` folder and double-click **Update Midi4u (click me).bat**.
+2. Open your `Documents\Midi4u-windows` folder and double-click **Update Midi4u (click me).bat**.
 3. Click **Yes** when Windows asks. The updater needs this to update the plug-in in Program Files.
 4. Wait for "Midi4u is updated" (or "already up to date"), then press **Enter**.
 
-The updater is two files: the `.bat` file is the one you double-click, and it runs `update.ps1`, which does the
-actual work. (Windows won't run a `.ps1` file when you double-click it.) Keep both files next to `Midi4u.exe`.
+The `.bat` file is the one you double-click. It runs `update.ps1`, which does the actual work. (Windows won't run a
+`.ps1` file when you double-click it.) Keep both next to `Midi4u.exe`.
+
+Lost the folder? Download
+[Midi4u-windows.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-windows.zip) again and follow
+[Step 3](#step-3-install-midi4u).
 
 It downloads the newest release from GitHub, updates both the app and the plug-in, and keeps your settings. If Midi4u
 was open, it restarts it.
@@ -316,11 +316,14 @@ was open, it restarts it.
 </td><td valign="top">
 
 1. Close Ableton Live.
-2. Download [Midi4u-macos.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-macos.zip) again.
-3. Double-click **`Install Midi4u (click me).command`** in the new download. macOS blocks it again, because it's a
-   new download: approve it the same way as in [Step 3](#step-3-install-midi4u).
+2. Open your `Documents/Midi4u-macos` folder and double-click **Update Midi4u (click me).command**.
+3. Wait for "Done!" (or "already up to date"), then close Terminal.
 
-It replaces the app and the plug-in and keeps your settings. If Midi4u was open, it closes it and opens the new one.
+It downloads the newest release from GitHub, updates both the app and the plug-in, and keeps your settings. If Midi4u
+was open, it closes it and opens the new one. macOS doesn't ask you to approve anything: the installer already did that.
+
+Lost the folder? Download [Midi4u-macos.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-macos.zip)
+again and follow [Step 3](#step-3-install-midi4u).
 
 </td></tr>
 </table>
@@ -344,7 +347,7 @@ It replaces the app and the plug-in and keeps your settings. If Midi4u was open,
 | 🍎 *"Install Midi4u (click me).command" Not Opened* or *"cannot be opened"* | Expected the first time. Approve it as in [Step 3](#step-3-install-midi4u). |
 | 🍎 *"Midi4u.app" is damaged* or *can't be opened* | You opened the app from the download folder. Run `Install Midi4u (click me).command` instead, then open Midi4u from **Applications**. |
 | 🍎 The Mic meter doesn't move | Midi4u wasn't allowed to use the mic. Open **System Settings → Privacy & Security → Microphone** and turn on **Midi4u**, then quit and reopen Midi4u. |
-| 🍎 Ableton doesn't list Midi4u Tap | Do [Step 4](#step-4-let-ableton-find-the-plug-in). The plug-in is in `~/Library/Audio/Plug-Ins/VST3`. |
+| Ableton doesn't list Midi4u Tap | Do [Step 4](#step-4-let-ableton-find-the-plug-in). The plug-in should be in `C:\Program Files\Common Files\VST3` (Windows) or `~/Library/Audio/Plug-Ins/VST3` (Mac). If it isn't, run the installer again. |
 
 Still stuck? Send Wayne the newest log file:
 

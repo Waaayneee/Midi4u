@@ -36,6 +36,7 @@ ditto "Midi4u Tap.vst3" "$plugins/Midi4u Tap.vst3" || stop "Couldn't copy Midi4u
 # The download marked the files as "from the internet". Clearing that mark stops macOS
 # blocking Midi4u, and lets Ableton load the plug-in.
 xattr -dr com.apple.quarantine "$apps/Midi4u.app" "$plugins/Midi4u Tap.vst3" 2>/dev/null
+xattr -d com.apple.quarantine "Update Midi4u (click me).command" 2>/dev/null # so the updater opens without asking
 
 echo "  Midi4u.app       -> $apps"
 echo "  Midi4u Tap.vst3  -> $plugins"

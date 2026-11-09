@@ -1,5 +1,7 @@
-# Updates Midi4u to the newest GitHub release.
-# Keep this file next to Midi4u.exe and run it with "Update Midi4u (click me).bat".
+# Installs Midi4u from this folder (-Install), or updates it to the newest GitHub release.
+# Keep this file next to Midi4u.exe and run it with "Install Midi4u (click me).bat" or
+# "Update Midi4u (click me).bat".
+param([switch]$Install)
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue' # the progress bar makes downloads very slow in Windows PowerShell
@@ -18,43 +20,53 @@ function Finish($message) {
 # Copying the plug-in into Program Files needs admin rights, so ask once and restart as admin.
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 if (-not ([Security.Principal.WindowsPrincipal]$identity).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    $argList = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    if ($Install) { $argList += ' -Install' }
     try {
-        Start-Process powershell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+        Start-Process powershell -Verb RunAs -ArgumentList $argList
         exit
     } catch {
-        Finish 'The updater needs admin rights to update the plug-in. Run it again and click Yes.'
+        Finish 'Midi4u needs admin rights to put the plug-in where Ableton finds it. Run it again and click Yes.'
     }
 }
 
 try {
     if (-not (Test-Path (Join-Path $appDir 'Midi4u.exe'))) {
-        Finish "Put the updater in the same folder as Midi4u.exe, then run it again. It is now in $appDir"
+        Finish "Put this file in the same folder as Midi4u.exe, then run it again. It is now in $appDir"
+    }
+    # "Start with Windows" remembers where Midi4u.exe is, so it must live somewhere permanent.
+    if ($Install -and $appDir -like (Join-Path $env:USERPROFILE 'Downloads*')) {
+        Finish 'Move this folder out of Downloads first (into Documents is good), then run the installer again.'
     }
 
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Write-Host 'Checking GitHub for the newest Midi4u...'
-    $release = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest"
-    $version = $release.tag_name
+    if (-not $Install) {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Write-Host 'Checking GitHub for the newest Midi4u...'
+        $release = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest"
+        $version = $release.tag_name
 
-    $versionFile = Join-Path $appDir 'version.txt'
-    if ((Test-Path $versionFile) -and (Get-Content $versionFile -Raw).Trim() -eq $version) {
-        Finish "Midi4u is already up to date ($version)."
+        $versionFile = Join-Path $appDir 'version.txt'
+        if ((Test-Path $versionFile) -and (Get-Content $versionFile -Raw).Trim() -eq $version) {
+            Finish "Midi4u is already up to date ($version)."
+        }
+
+        $asset = $release.assets | Where-Object { $_.name -eq 'Midi4u-windows.zip' }
+        if (-not $asset) { throw "Release $version has no Midi4u-windows.zip." }
     }
-
-    $asset = $release.assets | Where-Object { $_.name -eq 'Midi4u-windows.zip' }
-    if (-not $asset) { throw "Release $version has no Midi4u-windows.zip." }
 
     # Ableton keeps the plug-in file locked while it is open.
     if (Get-Process 'Ableton Live*' -ErrorAction SilentlyContinue) {
-        Finish 'Close Ableton Live first, then run the updater again.'
+        Finish 'Close Ableton Live first, then run this again.'
     }
 
-    $temp = Join-Path $env:TEMP 'Midi4u-update'
-    Remove-Item $temp -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory $temp | Out-Null
-    Write-Host "Downloading Midi4u $version..."
-    Invoke-WebRequest $asset.browser_download_url -OutFile "$temp\update.zip" -UseBasicParsing
-    Expand-Archive "$temp\update.zip" "$temp\files"
+    if (-not $Install) {
+        $temp = Join-Path $env:TEMP 'Midi4u-update'
+        Remove-Item $temp -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -ItemType Directory $temp | Out-Null
+        Write-Host "Downloading Midi4u $version..."
+        Invoke-WebRequest $asset.browser_download_url -OutFile "$temp\update.zip" -UseBasicParsing
+        Expand-Archive "$temp\update.zip" "$temp\files"
+    }
 
     $running = Get-Process 'Midi4u' -ErrorAction SilentlyContinue
     if ($running) {
@@ -64,18 +76,30 @@ try {
     }
 
     Write-Host 'Installing...'
-    Copy-Item "$temp\files\Midi4u.exe" $appDir -Force
-    Copy-Item "$temp\files\update.ps1" $appDir -Force # safe: PowerShell has already read this script
+    $folderPlugin = Join-Path $appDir 'Midi4u Tap.vst3'
+    if (-not $Install) {
+        # Refresh this whole folder, so it always holds the newest version. Overwriting this
+        # script is safe: PowerShell has already read it.
+        if (Test-Path $folderPlugin) { Remove-Item $folderPlugin -Recurse -Force }
+        Copy-Item "$temp\files\*" $appDir -Recurse -Force
+    }
+    if (-not (Test-Path $folderPlugin)) { throw "Midi4u Tap.vst3 is missing from $appDir. Download Midi4u again." }
     New-Item -ItemType Directory -Force $vst3Dir | Out-Null
     $oldPlugin = Join-Path $vst3Dir 'Midi4u Tap.vst3'
     if (Test-Path $oldPlugin) { Remove-Item $oldPlugin -Recurse -Force } # must be gone, or the copy nests inside it
-    Copy-Item "$temp\files\Midi4u Tap.vst3" $vst3Dir -Recurse -Force
-    Set-Content $versionFile $version
-    Remove-Item $temp -Recurse -Force -ErrorAction SilentlyContinue
+    Copy-Item $folderPlugin $vst3Dir -Recurse -Force
+
+    if (-not $Install) {
+        Set-Content $versionFile $version
+        Remove-Item $temp -Recurse -Force -ErrorAction SilentlyContinue
+    }
 
     # Start through Explorer so Midi4u runs as you, not as admin.
-    if ($running) { Start-Process explorer.exe "`"$(Join-Path $appDir 'Midi4u.exe')`"" }
+    if ($Install -or $running) { Start-Process explorer.exe "`"$(Join-Path $appDir 'Midi4u.exe')`"" }
+    if ($Install) {
+        Finish 'Midi4u is installed and opening now. Next, let Ableton find the plug-in (README, Step 4).'
+    }
     Finish "Midi4u is updated to $version."
 } catch {
-    Finish "Update failed: $($_.Exception.Message)"
+    Finish "Failed: $($_.Exception.Message)"
 }
