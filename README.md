@@ -19,11 +19,7 @@ Ableton Master ─ Midi4u Tap (VST3) ─ untouched ─→ ASIO → Scarlett → 
 > | Your computer | Download | Virtual cable | You double-click |
 > |---|---|---|---|
 > | **Windows 10 or 11** (64-bit) | [Midi4u-windows.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-windows.zip) | VB-Cable | `Install Midi4u (click me).bat` |
-> | 🍎 **Intel Mac** | [Midi4u-macos.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-macos.zip) | BlackHole 2ch | `Install Midi4u (click me).command` |
-> | 🍎 **Apple silicon Mac** (M1, M2, M3, M4…) | [Midi4u-macos.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-macos.zip) | BlackHole 2ch | `Install Midi4u (click me).command` |
->
-> Both Macs use the same download: it runs natively on either chip. **Not sure which Mac you have?** Go to
-> **Apple menu → About This Mac**: **Chip: Apple M…** means Apple silicon, **Processor: … Intel** means Intel.
+> | 🍎 **Mac** (Intel or Apple silicon) | [Midi4u-macos.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-macos.zip) | BlackHole 2ch | `Install Midi4u (click me).command` |
 
 ## Contents
 
@@ -90,9 +86,7 @@ Use Homebrew? `brew install blackhole-2ch` does the same.
 
 ### Step 2: Download Midi4u
 
-<table>
-<tr><th width="50%">Windows</th><th width="50%">🍎 Mac (Intel and Apple silicon)</th></tr>
-<tr><td valign="top">
+#### Windows
 
 1. Click [Download Midi4u-windows.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-windows.zip).
 2. Right-click the zip and choose **Properties**. If you see an **Unblock** box at the bottom, tick it and click
@@ -107,7 +101,7 @@ Use Homebrew? `brew install blackhole-2ch` does the same.
 | `Midi4u Tap.vst3` | The plug-in for Ableton (a folder). The installer copies it for you |
 | `update.ps1` | Used by the installer and the updater. Don't open it |
 
-</td><td valign="top">
+#### 🍎 Mac (Intel or Apple silicon)
 
 1. Click [Download Midi4u-macos.zip](https://github.com/Waaayneee/Midi4u/releases/latest/download/Midi4u-macos.zip).
 2. Open your **Downloads** folder. Safari may already have unzipped it into a folder called **Midi4u-macos**. If you
@@ -120,14 +114,9 @@ Use Homebrew? `brew install blackhole-2ch` does the same.
 | `Midi4u.app` | The app. The installer copies it for you |
 | `Midi4u Tap.vst3` | The plug-in for Ableton. The installer copies it for you |
 
-</td></tr>
-</table>
-
 ### Step 3: Install Midi4u
 
-<table>
-<tr><th width="50%">Windows: double-click the installer</th><th width="50%">🍎 Mac: double-click the installer</th></tr>
-<tr><td valign="top">
+#### Windows: double-click the installer
 
 1. Move the extracted **Midi4u-windows** folder into your **Documents** folder and keep it there. Midi4u runs from
    it, and the updater lives in it.
@@ -139,7 +128,7 @@ Use Homebrew? `brew install blackhole-2ch` does the same.
 Optional: right-click `Midi4u.exe`, choose **Show more options > Send to > Desktop (create shortcut)** to get a
 desktop icon.
 
-</td><td valign="top">
+#### 🍎 Mac: double-click the installer
 
 1. Move the **Midi4u-macos** folder into your **Documents** folder and keep it there. The updater lives in it.
 2. Double-click **`Install Midi4u (click me).command`**.
@@ -161,9 +150,6 @@ desktop icon.
 
 Don't open `Midi4u.app` from the download folder: the installer has already put it in **Applications** and told macOS
 it's safe. From now on, open Midi4u from **Applications** (or press **⌘ Space** and type `Midi4u`).
-
-</td></tr>
-</table>
 
 ### Step 4: Let Ableton find the plug-in
 
@@ -349,7 +335,3 @@ again and follow [Step 3](#step-3-install-midi4u).
 | 🍎 The Mic meter doesn't move | Midi4u wasn't allowed to use the mic. Open **System Settings → Privacy & Security → Microphone** and turn on **Midi4u**, then quit and reopen Midi4u. |
 | Ableton doesn't list Midi4u Tap | Do [Step 4](#step-4-let-ableton-find-the-plug-in). The plug-in should be in `C:\Program Files\Common Files\VST3` (Windows) or `~/Library/Audio/Plug-Ins/VST3` (Mac). If it isn't, run the installer again. |
 
-Still stuck? Send Wayne the newest log file:
-
-* **Windows:** paste `%APPDATA%\Midi4u\logs` into the File Explorer address bar.
-* 🍎 **Mac:** in Finder, choose **Go → Go to Folder…** and paste `~/Library/Application Support/Midi4u/logs`.
