@@ -5,7 +5,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write # lets a v* tag publish a GitHub Release
+  contents: write # lets pushes to main publish a GitHub Release
 
 jobs:
   windows:
@@ -39,30 +39,95 @@ jobs:
           Copy-Item build/app/Midi4u_artefacts/Release/Midi4u.exe package/
           Copy-Item -Recurse "build/plugin/Midi4uTap_artefacts/Release/VST3/Midi4u Tap.vst3" package/
           Copy-Item updater/* package/
+          Compress-Archive package/* Midi4u-windows.zip
 
-      # Download from the run's Summary page: a zip with Midi4u.exe, the Midi4u Tap.vst3 folder and the updater.
       - uses: actions/upload-artifact@v4
         with:
           name: Midi4u-windows
-          path: package/
+          path: Midi4u-windows.zip
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: pluginval-logs
+          name: pluginval-logs-windows
           path: pluginval-logs/
           if-no-files-found: ignore
 
-      # Every push to main that passes everything above becomes the newest release, so the
-      # README's download link and the updater always get the latest build.
-      - name: Publish release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
+  # One universal build that runs natively on both Intel and Apple silicon Macs.
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+
+      - name: Build plugin, app and tests
+        run: cmake --build build --parallel
+
+      - name: Unit and integration tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Check both chips are inside
         run: |
-          $tag = "build-${{ github.run_number }}"
-          gh release view $tag *> $null
-          if ($LASTEXITCODE -eq 0) { exit 0 } # this run was re-run and already published
-          Compress-Archive package/* Midi4u-windows.zip
-          gh release create $tag Midi4u-windows.zip --target $env:GITHUB_SHA --title "Midi4u build ${{ github.run_number }}" --generate-notes
+          for binary in "build/app/Midi4u_artefacts/Release/Midi4u.app/Contents/MacOS/Midi4u" \
+                        "build/plugin/Midi4uTap_artefacts/Release/VST3/Midi4u Tap.vst3/Contents/MacOS/Midi4u Tap"; do
+            archs=$(lipo -archs "$binary")
+            echo "$binary: $archs"
+            [[ " $archs " == *" arm64 "* && " $archs " == *" x86_64 "* ]] || exit 1
+          done
+
+      - name: pluginval (strictness 10)
+        run: |
+          curl -sSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          unzip -q pluginval.zip -d pluginval
+          ./pluginval/pluginval.app/Contents/MacOS/pluginval --strictness-level 10 --validate-in-process --output-dir pluginval-logs --validate "build/plugin/Midi4uTap_artefacts/Release/VST3/Midi4u Tap.vst3"
+
+      # Not signed with an Apple Developer ID, so only a local ("ad-hoc") signature, which
+      # Apple silicon needs to run anything. The install script clears the download mark.
+      - name: Package
+        run: |
+          mkdir Midi4u-macos
+          ditto build/app/Midi4u_artefacts/Release/Midi4u.app Midi4u-macos/Midi4u.app
+          ditto "build/plugin/Midi4uTap_artefacts/Release/VST3/Midi4u Tap.vst3" "Midi4u-macos/Midi4u Tap.vst3"
+          cp macos/*.command Midi4u-macos/
+          codesign --force --deep --sign - Midi4u-macos/Midi4u.app "Midi4u-macos/Midi4u Tap.vst3"
+          codesign --verify --deep --strict Midi4u-macos/Midi4u.app "Midi4u-macos/Midi4u Tap.vst3"
+          ditto -c -k --keepParent Midi4u-macos Midi4u-macos.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Midi4u-macos
+          path: Midi4u-macos.zip
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pluginval-logs-macos
+          path: pluginval-logs/
+          if-no-files-found: ignore
+
+  # Every push to main where both builds pass becomes the newest release, so the README's
+  # download links and the Windows updater always get the latest build.
+  release:
+    needs: [windows, macos]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: build-${{ github.run_number }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Midi4u-*
+          merge-multiple: true
+
+      - name: Publish release
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0 # this run was re-run and already published
+          fi
+          gh release create "$TAG" Midi4u-windows.zip Midi4u-macos.zip --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" --title "Midi4u build ${{ github.run_number }}" --generate-notes
